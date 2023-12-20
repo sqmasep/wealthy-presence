@@ -3,6 +3,7 @@ import { APP_ID } from "./env";
 import { discordClient as discordClient } from "./discordClient";
 import { setActivity } from "./setActivity";
 import "dotenv/config";
+import { defaultPreset } from "./defaultPreset";
 
 console.log(APP_ID);
 
@@ -19,6 +20,7 @@ console.log(
   discordClient.on("ready", () => {
     console.info("Wealthy Presence connected.");
 
+    if (!presets.length) setActivity(defaultPreset);
     if (presets.length === 1) setActivity(presets[0]);
     else if (presets.length > 1) {
       let i = 0;
