@@ -4,6 +4,21 @@
 
 This is heavily based on [xKawu's Rich Presence +](https://github.com/xkawu/rich-presence-plus)
 
+## How to run it?
+
+Please create a presets.ts in the root of the project, and export a `const` named `presets` with the following type:
+
+```ts
+import { Preset } from "./src/types";
+
+export const presets = [
+  // your presets here
+  {
+    // one preset
+  },
+] satisfies Preset[];
+```
+
 ## Why not just using xKawu's one?
 
 I wanted to add more type-safety features, which means removing all the file loaders, .json config files and remove all the useless logs, unnecessary prompts and other stuff that were causing the presence to use unnecessary CPU like an infinite loading spinner in the console. I don't need console library just to run a simple app like this one too btw
@@ -21,4 +36,4 @@ Because Rich Presence + has already two positive signs, and Rich Presence ++ is 
 ## TODO
 
 - add all the default features from xKawu's one, even the one i'm not using myself
-- add other cool ideas like dynamic values (for example fetch something and use the response to display it in the presence, which wouldn't be possible with xKawu's JSON-based config)
+- add other cool ideas like dynamic values (for example fetch something and use the response to display it in the presence, which wouldn't be possible with xKawu's JSON-based config). Which means you can even have it linked to a database and a server, and having a GUI to customize it through the web (yes it's overkill but it's possible)

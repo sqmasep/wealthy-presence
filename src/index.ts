@@ -1,4 +1,4 @@
-import { presets } from "./presets";
+import { presets } from "../presets";
 import { APP_ID } from "./env";
 import { discordClient as discordClient } from "./discordClient";
 import { setActivity } from "./setActivity";
