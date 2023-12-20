@@ -1,0 +1,16 @@
+{
+  "name": "wealthy_presence",
+  "scripts": {
+    "dev": "nodemon ./src/index.ts"
+  },
+  "dependencies": {
+    "discord-rpc": "^4.0.1",
+    "dotenv": "^16.3.1",
+    "valibot": "^0.24.1"
+  },
+  "devDependencies": {
+    "@types/discord-rpc": "^4.0.8",
+    "@types/node": "^20.10.5",
+    "nodemon": "^3.0.2"
+  }
+}
