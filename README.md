@@ -33,7 +33,79 @@ The good point is that by using a programming language for static data, you can 
 
 Because Rich Presence + has already two positive signs, and Rich Presence ++ is comically long, so i'm using Wealthy Presence like it's a luxury version of Rich Presence + and i think it's funny
 
-## TODO
+## What can Wealthy Presence do that Rich Presence + can't?
 
-- add all the default features from xKawu's one, even the one i'm not using myself
-- add other cool ideas like dynamic values (for example fetch something and use the response to display it in the presence, which wouldn't be possible with xKawu's JSON-based config). Which means you can even have it linked to a database and a server, and having a GUI to customize it through the web (yes it's overkill but it's possible)
+You can now write custom functions to generate the data that will be displayed in your presence.
+
+First time:
+![Dynamic value](/assets/dynamic_value.png)
+
+Second time:
+![Dynamic value](/assets/dynamic_value2.png)
+
+Third time:
+![Dynamic value](/assets/dynamic_value3.png)
+
+To reproduce that, your `presets.ts` can look like this:
+
+```ts
+import { Preset } from "./src/types";
+
+// Create a function that will get a random atom from an API, and return the data that will be displayed in the presence
+const getRandomAtomFormatted = async () => {
+  // Fetch a random atom from an API (mine is local)
+  const res = await fetch("http://localhost:4222/atoms/random").then(r =>
+    r.json()
+  );
+
+  // Return the data that will be displayed in the presence (see the image above)
+  return {
+    title: `Atom ${res.atomicNumber} / 118`,
+    description: `${res.name.en} (${res.symbol})`,
+    largeImage:
+      "https://static.wixstatic.com/media/8fbcc2_bcb7e56373b84487b14d693a927c6814~mv2.gif",
+  } satisfies Preset;
+};
+
+export const presets = [
+  // In order to be changed every 15s, you need to pass it at least twice, else it will be run only once and never change
+  getRandomAtomFormatted,
+  getRandomAtomFormatted,
+] satisfies Preset[];
+```
+
+Note that you are not force to use named functions, you can write it inline as well:
+
+```ts
+import { Preset } from "./src/types";
+
+export const presets = [
+  // Dynamic value that will be rerun every time the presence will meet the function
+  async () => {
+    const res = await fetch("...").then(res => res.json());
+
+    return {
+      title: "title",
+      description: "description",
+    } satisfies Preset;
+  },
+  // Static data, will never change
+  {
+    title: "title",
+    description: "description",
+  },
+] satisfies Preset[];
+```
+
+Note that you can also use functions for each field in a preset:
+
+```ts
+import { Preset } from "./src/types";
+
+export const presets = [
+  {
+    title: "Heads or tails?",
+    description: () => (Math.random() > 0.5 ? "Heads" : "Tails"),
+  },
+] satisfies Preset[];
+```

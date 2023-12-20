@@ -1,14 +1,34 @@
-export interface Preset {
-  title?: string;
-  description?: string;
+export type Preset =
+  | {
+      title?: OrAnyFunction<string>;
+      description?: OrAnyFunction<string>;
 
-  largeImage?: string;
-  smallImage?: string;
+      largeImage?: OrAnyFunction<string>;
+      largeImageText?: OrAnyFunction<string>;
 
-  buttons?: [Button] | [Button, Button];
-}
+      smallImage?: OrAnyFunction<string>;
+      smallImageText?: OrAnyFunction<string>;
+
+      buttons?: OrAnyFunction<[Button] | [Button, Button]>;
+
+      partyId?: OrAnyFunction<string>;
+      partySize?: OrAnyFunction<number>;
+      partyMax?: OrAnyFunction<number>;
+
+      startTimestamp?: OrAnyFunction<number>;
+      endTimestamp?: OrAnyFunction<number>;
+
+      instance?: boolean;
+      joinSecret?: string;
+      spectateSecret?: string;
+      matchSecret?: string;
+    }
+  | (() => Exclude<Preset, Function>)
+  | (() => Promise<Exclude<Preset, Function>>);
 
 interface Button {
   url: string;
   label: string;
 }
+
+type OrAnyFunction<T> = T | (() => Promise<T>);
