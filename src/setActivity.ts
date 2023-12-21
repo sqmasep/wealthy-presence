@@ -1,8 +1,8 @@
 import { discordClient } from "./discordClient";
 import { Preset } from "./types";
+import { isFunction } from "./utils/isFunction";
 
-const isFunction = (x: any): x is Function => typeof x === "function";
-const getOrAwait = async <T>(x: T | (() => Promise<T>)): Promise<T> =>
+const getOrAwait = async <T>(x: T | (() => T) | (() => Promise<T>)) =>
   isFunction(x) ? await x() : x;
 
 export async function setActivity(preset: Preset) {

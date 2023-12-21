@@ -9,6 +9,7 @@ export type Preset =
       smallImage?: OrAnyFunction<string>;
       smallImageText?: OrAnyFunction<string>;
 
+      // If defined, only one or two buttons maximum allowed (discord limitations)
       buttons?: OrAnyFunction<[Button] | [Button, Button]>;
 
       partyId?: OrAnyFunction<string>;
@@ -31,4 +32,4 @@ interface Button {
   label: string;
 }
 
-type OrAnyFunction<T> = T | (() => Promise<T>);
+type OrAnyFunction<T> = T | (() => T) | (() => Promise<T>);

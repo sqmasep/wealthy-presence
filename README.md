@@ -69,9 +69,11 @@ To reproduce that, your `presets.ts` can look like this:
 
 ```ts
 import { Preset } from "./src/types";
+import { createPreset } from "./src/utils";
 
 // Create a function that will get a random atom from an API, and return the data that will be displayed in the presence
-const getRandomAtomFormatted = async () => {
+// You can use the `createPreset` function so you have autocomplete and type-safety without having to write the type yourself
+const getRandomAtomPreset = createPreset(async () => {
   // Fetch a random atom from an API (mine is local)
   const res = await fetch("http://localhost:4222/atoms/random").then(r =>
     r.json()
@@ -83,17 +85,19 @@ const getRandomAtomFormatted = async () => {
     description: `${res.name.en} (${res.symbol})`,
     largeImage:
       "https://static.wixstatic.com/media/8fbcc2_bcb7e56373b84487b14d693a927c6814~mv2.gif",
-  } satisfies Preset;
-};
+  };
+});
 
 export const presets = [
-  // In order to be changed every 15s, you need to pass it at least twice, else it will be run only once and never change
-  getRandomAtomFormatted,
-  getRandomAtomFormatted,
+  // If there is only one preset that is a function, it will be rerun every 15s, else it will be static
+  // If there is multiple presets, they will be cycled every 15s and if there is a function, it will be rerun as well
+  // If the preset is not a function but contains functions, they will be executed once and the result will be static
+  // If there are multiple presets, every preset having at least one function will be recalculated
+  getRandomAtomPreset,
 ] satisfies Preset[];
 ```
 
-Note that you are not force to use named functions, you can write it inline as well:
+Note that you are not force to use named functions, you can write them inline as well:
 
 ```ts
 import { Preset } from "./src/types";
@@ -106,7 +110,7 @@ export const presets = [
     return {
       title: "title",
       description: "description",
-    } satisfies Preset;
+    };
   },
   // Static data, will never change
   {
@@ -139,3 +143,4 @@ Because Rich Presence + has already two positive signs, and Rich Presence ++ is 
 - [x] Add a way to use functions for each field in a preset
 - [ ] Improve README for the different fields (title, description) with images so the user can configure it more easily
 - [ ] Apparently discord-rpc is deprecated? i've seen stuff about discord game-sdk, i need to check that out
+- [ ] Make it a library so it can be used in other projects
