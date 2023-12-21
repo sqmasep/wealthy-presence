@@ -1,12 +1,20 @@
 # Wealthy Presence
 
-[🔄] This is still work in progress dont blame my readme
+[🔄] This is still work in progress
 
 This is heavily based on [xKawu's Rich Presence +](https://github.com/xkawu/rich-presence-plus)
 
+Wealthy Presence is a Discord Rich Presence client that allows you to display custom data in your presence. It's based on [Rich Presence +](https://github.com/xkawu/rich-presence-plus), but with a lot of improvements and cool features. It's also written in TypeScript, which means it's more type-safe and more readable. It's also more flexible, you can now use functions to generate your data, which means you can use loops, fetch, database calls, etc. The main goal is to be less limited and more creative, while offering a better DX (Developer Experience) and a better UX (User Experience)
+
 ## How to run it?
 
-Please create a presets.ts in the root of the project, and export a `const` named `presets` with the following type:
+Assuming you already have `git`, `node`, and `npm` installed in your machine, you can follow these steps:
+
+First, run `git clone https://github.com/sqmasep/wealthy-presence` to clone the repository
+
+Then, run `npm install` to install the dependencies
+
+Then, please create a `presets.ts` file at the root of the project (at the same location of that README.md), and export a `const` named `presets` with the following type:
 
 ```ts
 import { Preset } from "./src/types";
@@ -19,31 +27,42 @@ export const presets = [
 ] satisfies Preset[];
 ```
 
+Then, create a `.env` file at the root of the project (at the same location of that README.md), and add the following content:
+
+```bash
+APP_ID=your_app_id
+```
+
+Replace `your_app_id` with your Discord application ID. You can create [a new application here](https://discord.com/developers/applications) if you don't have one yet
+
+Then, run `npm run dev` to start the project
+
+Have fun and enjoy your presence!
+
 ## Why not just using xKawu's one?
+
+The most significative reason is that you can now use a programming language to generate your presence data, which means you can use loops, functions, etc. You can also use external APIs to fetch data and display it in your presence with functions. You will see examples below. Wealthy Presence was made to be more flexible, for your convenience and for your creativity. You can now do whatever you want with your presence, you are not limited to a static data anymore
 
 I wanted to add more type-safety features, which means removing all the file loaders, .json config files and remove all the useless logs, unnecessary prompts and other stuff that were causing the presence to use unnecessary CPU like an infinite loading spinner in the console. I don't need console library just to run a simple app like this one too btw
 
 Also, i wanted to improve the terrible file structure and make it more readable and maintainable. Original project is a single .js file, which is a very bad idea
 
-The goal is also to improved variable names for the users, `largeImageKey` is confusing, `largeImage` is more explicit and i even may change it to `largeImageUrl` instead to be even more clear. Also i will perform local validation so it errors faster if you make a mistake in the config (not an url, not a string, etc.)
-
-The good point is that by using a programming language for static data, you can reuse the same data in multiple places, which is not possible with .json files. Just use a shared constant and you're good to go
-
-## Why "Wealthy Presence"?
-
-Because Rich Presence + has already two positive signs, and Rich Presence ++ is comically long, so i'm using Wealthy Presence like it's a luxury version of Rich Presence + and i think it's funny
+The goal was also to improved variable names for the users, `largeImageKey` is confusing, `largeImage` is more explicit and i even may change it to `largeImageUrl` instead to be even more clear. Also i will perform local validation so it errors faster if you make a mistake in the config (not an url, not a string, etc.)
 
 ## What can Wealthy Presence do that Rich Presence + can't?
 
 You can now write custom functions to generate the data that will be displayed in your presence.
 
 First time:
+
 ![Dynamic value](/assets/dynamic_value.png)
 
 Second time:
+
 ![Dynamic value](/assets/dynamic_value2.png)
 
 Third time:
+
 ![Dynamic value](/assets/dynamic_value3.png)
 
 To reproduce that, your `presets.ts` can look like this:
@@ -109,3 +128,14 @@ export const presets = [
   },
 ] satisfies Preset[];
 ```
+
+## Why "Wealthy Presence"?
+
+Because Rich Presence + has already two positive signs, and Rich Presence ++ is comically long, so i'm using Wealthy Presence like it's a luxury version of Rich Presence + and i think it's funny
+
+## TODO
+
+- [x] Add a way to use functions to generate the data
+- [x] Add a way to use functions for each field in a preset
+- [ ] Improve README for the different fields (title, description) with images so the user can configure it more easily
+- [ ] Apparently discord-rpc is deprecated? i've seen stuff about discord game-sdk, i need to check that out
