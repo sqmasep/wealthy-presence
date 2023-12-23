@@ -12,6 +12,8 @@ Assuming you already have `git`, `node`, and `npm` installed in your machine, yo
 
 First, run `git clone https://github.com/sqmasep/wealthy-presence` to clone the repository
 
+**IMPORTANT**: go to `local` directory for now, i'm making a library to make it easier to use, but for now you should use the local version
+
 Then, run `npm install` to install the dependencies
 
 Then, please create a `presets.ts` file at the root of the project (at the same location of that README.md), and export a `const` named `presets` with the following type:
@@ -55,15 +57,15 @@ You can now write custom functions to generate the data that will be displayed i
 
 First time:
 
-![Dynamic value](/local/assets/dynamic_value.png)
+![Dynamic value](/assets/dynamic_value.png)
 
 Second time:
 
-![Dynamic value](/local/assets/dynamic_value2.png)
+![Dynamic value](/assets/dynamic_value2.png)
 
 Third time:
 
-![Dynamic value](/local/assets/dynamic_value3.png)
+![Dynamic value](/assets/dynamic_value3.png)
 
 To reproduce that, your `presets.ts` can look like this:
 
