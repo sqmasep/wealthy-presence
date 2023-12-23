@@ -55,15 +55,15 @@ You can now write custom functions to generate the data that will be displayed i
 
 First time:
 
-![Dynamic value](/assets/dynamic_value.png)
+![Dynamic value](/local/assets/dynamic_value.png)
 
 Second time:
 
-![Dynamic value](/assets/dynamic_value2.png)
+![Dynamic value](/local/assets/dynamic_value2.png)
 
 Third time:
 
-![Dynamic value](/assets/dynamic_value3.png)
+![Dynamic value](/local/assets/dynamic_value3.png)
 
 To reproduce that, your `presets.ts` can look like this:
 

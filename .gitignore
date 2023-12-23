@@ -1,4 +1,4 @@
-/node_modules
-/.env
-/presets.ts
-/private/*
+node_modules
+.env
+local/presets.ts
+local/private/*
