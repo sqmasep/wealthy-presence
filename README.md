@@ -145,4 +145,3 @@ Because Rich Presence + has already two positive signs, and Rich Presence ++ is 
 - [x] Add a way to use functions for each field in a preset
 - [ ] Improve README for the different fields (title, description) with images so the user can configure it more easily
 - [ ] Apparently discord-rpc is deprecated? i've seen stuff about discord game-sdk, i need to check that out
-- [ ] Make it a library so it can be used in other projects

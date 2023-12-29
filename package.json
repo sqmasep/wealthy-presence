@@ -6,7 +6,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "nodemon ./src/wealthy-presence.ts",
-    "build": "tsup src/wealthy-presence.ts --format cjs,esm --dts --out-dir dist --minify --clean",
+    "build": "tsup ./src/index.ts  --format cjs,esm --dts --out-dir dist --minify --clean",
     "lint:eslint": "eslint . --ext .ts",
     "lint:eslint-fix": "eslint . --ext .ts --fix",
     "lint:tsc": "tsc --noEmit -p .",
