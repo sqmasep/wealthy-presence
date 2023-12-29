@@ -10,12 +10,12 @@
     "moduleResolution": "NodeNext",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "incremental": true,
+    "incremental": false,
     "paths": {
       "~/*": ["./src/*"]
     },
     "rootDir": "./"
   },
-  "include": ["**/*.ts", "**/*.tsx", ".eslintrc.cjs", "prettier.config.js"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*.ts", ".eslintrc.cjs", "prettier.config.js"],
+  "exclude": ["node_modules", "dist"]
 }
