@@ -6,7 +6,6 @@ import { isFunction } from "./utils/isFunction";
 import type { MaybeAnyFunction } from "./utils/types";
 import "dotenv/config";
 import RPC from "discord-rpc";
-import { createPreset } from "./utils/createPreset";
 
 export class WealthyPresence {
   #presets: MaybeAnyFunction<PresetWithMaybeFunctions>[] = [];
@@ -114,47 +113,3 @@ interface WealthyConfig {
   presets: MaybeAnyFunction<PresetWithMaybeFunctions>[];
   appId: AppId | undefined;
 }
-
-const allAtoms = (async () => {
-  const res = (await fetch("http://localhost:4222/atoms").then(async (res) =>
-    res.json(),
-  )) as {
-    atomicNumber: number;
-    name: { en: string };
-    symbol: string;
-    family: { name: string };
-  }[];
-
-  return res;
-})();
-
-const randomAtomPreset = createPreset(async () => {
-  const randomAtom = await allAtoms.then(
-    (atoms) => atoms[Math.floor(Math.random() * atoms.length)],
-  );
-
-  return {
-    title: `Atom ${randomAtom.atomicNumber} / 118`,
-    description: `${randomAtom.name.en} (${randomAtom.symbol})`,
-    largeImageUrl:
-      randomAtom.family.name === "Actinide"
-        ? "https://media3.giphy.com/media/1APhwnhp7loe6bd0m6/200w.gif?cid=82a1493bkhubp3x83f2p4ecb2tq5hdk9jymyxhaxa2gnbhlp&ep=v1_gifs_related&rid=200w.gif&ct=g"
-        : "https://static.wixstatic.com/media/8fbcc2_bcb7e56373b84487b14d693a927c6814~mv2.gif",
-
-    buttons: [
-      {
-        label: "🌐 Atom quiz soon!　⇒",
-        url: "https://github.com/sqmasep/atoms-quiz",
-      },
-    ],
-  };
-});
-
-const wealthyPresence = new WealthyPresence({
-  presets: [randomAtomPreset],
-  appId: process.env.APP_ID,
-});
-
-(async () => {
-  await wealthyPresence.run();
-})();

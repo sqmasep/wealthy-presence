@@ -1,4 +1,4 @@
-import type { BaseSchema, Output } from "valibot";
+import type { Output } from "valibot";
 import {
   array,
   boolean,
