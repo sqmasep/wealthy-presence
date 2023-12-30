@@ -1,16 +1,15 @@
 {
   "name": "wealthy-presence",
-  "main": "./dist/wealthy-presence.js",
-  "module": "./dist/wealthy-presence.mjs",
-  "types": "./dist/wealthy-presence.d.ts",
-  "version": "0.0.1",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "version": "0.1.0",
   "scripts": {
     "dev": "nodemon ./src/wealthy-presence.ts",
     "build": "tsup ./src/index.ts  --format cjs,esm --dts --out-dir dist --minify --clean",
     "lint:eslint": "eslint . --ext .ts",
     "lint:eslint-fix": "eslint . --ext .ts --fix",
-    "lint:tsc": "tsc --noEmit -p .",
-    "dev:test": "nodemon ./test.ts"
+    "lint:tsc": "tsc --noEmit -p ."
   },
   "dependencies": {
     "discord-rpc": "^4.0.1",
