@@ -81,6 +81,8 @@ export class WealthyPresence {
   }
 
   async run() {
+    await this.stop();
+    await this.#discordClient?.destroy();
     this.#discordClient = new RPC.Client({ transport: "ipc" });
     this.#discordClient.on("ready", async () => {
       const presets = this.#presets;
