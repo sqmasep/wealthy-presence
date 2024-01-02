@@ -7,8 +7,13 @@ import type { MaybeAnyFunction } from "./utils/types";
 import "dotenv/config";
 import RPC from "discord-rpc";
 
+export interface AnyPreset {
+  value: MaybeAnyFunction<PresetWithMaybeFunctions>;
+  id: string;
+}
+
 export class WealthyPresence {
-  #presets: MaybeAnyFunction<PresetWithMaybeFunctions>[] = [];
+  #presets: AnyPreset[] = [];
   #appId: AppId;
   #discordClient: RPC.Client | null = null;
   #currentIndex = 0;
@@ -20,16 +25,28 @@ export class WealthyPresence {
     this.#appId = appId;
 
     RPC.register(appId);
-    this.#discordClient = new RPC.Client({ transport: "ipc" });
   }
 
-  setPresets(presets: MaybeAnyFunction<PresetWithMaybeFunctions>[]) {
+  setPresets(presets: AnyPreset[]) {
     if (this.#interval) clearInterval(this.#interval);
     this.#presets = presets;
     this.#discordClient?.emit("ready");
   }
+  getPresets() {
+    return this.#presets;
+  }
 
-  async setActivity(preset: MaybeAnyFunction<PresetWithMaybeFunctions>) {
+  addPreset(preset: AnyPreset) {
+    this.#presets.push(preset);
+    this.#discordClient?.emit("ready");
+  }
+
+  removePreset(id: AnyPreset["id"]) {
+    this.#presets = this.#presets.filter(preset => preset.id !== id);
+    this.#discordClient?.emit("ready");
+  }
+
+  async setActivity(preset: AnyPreset["value"]) {
     try {
       const p = await getOrAwait(preset);
 
@@ -64,7 +81,8 @@ export class WealthyPresence {
   }
 
   async run() {
-    this.#discordClient?.on("ready", async () => {
+    this.#discordClient = new RPC.Client({ transport: "ipc" });
+    this.#discordClient.on("ready", async () => {
       const presets = this.#presets;
 
       // Empty state
@@ -74,42 +92,47 @@ export class WealthyPresence {
 
       // More than 1 preset
       if (presets.length > 1) {
-        await this.setActivity(presets[this.#currentIndex]);
+        await this.setActivity(presets[this.#currentIndex].value);
 
         this.#interval = setInterval(async () => this.skip(), 15000);
         return;
       }
 
       // Only 1 preset
-      if (isFunction(presets[0])) {
-        await this.setActivity(presets[0]);
+      if (isFunction(presets[0].value)) {
+        await this.setActivity(presets[0].value);
 
         this.#interval = setInterval(async () => {
-          await this.setActivity(presets[0]);
+          await this.setActivity(presets[0].value);
         }, 15000);
       } else {
-        await this.setActivity(presets[0]);
+        await this.setActivity(presets[0].value);
       }
     });
 
-    await this.#discordClient?.login({ clientId: this.#appId });
+    await this.#discordClient.login({ clientId: this.#appId });
   }
 
   async skip(amount?: number) {
     this.#currentIndex =
       (amount ?? this.#currentIndex + 1) % this.#presets.length;
 
-    const currentActivity = this.#presets[this.#currentIndex];
+    const currentActivity = this.#presets[this.#currentIndex].value;
     await this.setActivity(currentActivity);
   }
 
   async stop() {
     if (this.#interval) clearInterval(this.#interval);
     await this.#discordClient?.destroy();
+    this.#discordClient = null;
+  }
+
+  isRunning() {
+    return !!this.#discordClient;
   }
 }
 
 interface WealthyConfig {
-  presets: MaybeAnyFunction<PresetWithMaybeFunctions>[];
+  presets: AnyPreset[];
   appId: AppId | undefined;
 }
