@@ -6,11 +6,30 @@ import { isFunction } from "./utils/isFunction";
 import type { MaybeAnyFunction } from "./utils/types";
 import "dotenv/config";
 import RPC from "discord-rpc";
+import EventEmitter from "events";
 
 export interface AnyPreset {
   value: MaybeAnyFunction<PresetWithMaybeFunctions>;
   id: string;
 }
+
+export type EventUnion =
+  | {
+      name: "start";
+      listener: () => void;
+    }
+  | {
+      name: "stop";
+      listener: () => void;
+    }
+  | {
+      name: "preset changed";
+      listener: (preset: AnyPreset["value"]) => void;
+    };
+
+export type EventData = {
+  [K in EventUnion["name"]]: Extract<EventUnion, { name: K }>;
+}[EventUnion["name"]];
 
 export class WealthyPresence {
   #presets: AnyPreset[] = [];
@@ -19,12 +38,28 @@ export class WealthyPresence {
   #currentIndex = 0;
   #interval: NodeJS.Timeout | null = null;
 
+  #eventEmitter = new EventEmitter();
+
   constructor(config: WealthyConfig) {
     const appId = parse(appIdSchema, config.appId);
     this.#presets = config.presets;
     this.#appId = appId;
 
     RPC.register(appId);
+  }
+
+  on<TEventData extends EventData>(
+    event: TEventData["name"],
+    listener: TEventData["listener"],
+  ) {
+    this.#eventEmitter.on(event, listener);
+  }
+
+  #emit<TEventData extends EventData>(
+    event: TEventData["name"],
+    ...args: Parameters<TEventData["listener"]>
+  ) {
+    this.#eventEmitter.emit(event, args);
   }
 
   setPresets(presets: AnyPreset[]) {
@@ -75,6 +110,7 @@ export class WealthyPresence {
         joinSecret: await getOrAwait(p.joinSecret),
         spectateSecret: await getOrAwait(p.spectateSecret),
       });
+      this.#emit("preset changed", preset);
     } catch (error) {
       return Promise.reject(error);
     }
