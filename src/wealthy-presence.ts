@@ -7,29 +7,13 @@ import type { MaybeAnyFunction } from "./utils/types";
 import "dotenv/config";
 import RPC from "discord-rpc";
 import EventEmitter from "events";
+import type { EventData } from ".";
+import type { WealthyConfig } from "./types";
 
 export interface AnyPreset {
   value: MaybeAnyFunction<PresetWithMaybeFunctions>;
   id: string;
 }
-
-export type EventUnion =
-  | {
-      name: "start";
-      listener: () => void;
-    }
-  | {
-      name: "stop";
-      listener: () => void;
-    }
-  | {
-      name: "preset changed";
-      listener: (preset: AnyPreset["value"]) => void;
-    };
-
-export type EventData = {
-  [K in EventUnion["name"]]: Extract<EventUnion, { name: K }>;
-}[EventUnion["name"]];
 
 export class WealthyPresence {
   #presets: AnyPreset[] = [];
@@ -37,7 +21,6 @@ export class WealthyPresence {
   #discordClient: RPC.Client | null = null;
   #currentIndex = 0;
   #interval: NodeJS.Timeout | null = null;
-
   #eventEmitter = new EventEmitter();
 
   constructor(config: WealthyConfig) {
@@ -52,7 +35,14 @@ export class WealthyPresence {
     event: TEventData["name"],
     listener: TEventData["listener"],
   ) {
-    this.#eventEmitter.on(event, listener);
+    this.#eventEmitter.addListener(event, listener);
+  }
+
+  removeListener<TEventData extends EventData>(
+    event: TEventData["name"],
+    listener: TEventData["listener"],
+  ) {
+    this.#eventEmitter.removeListener(event, listener);
   }
 
   #emit<TEventData extends EventData>(
@@ -116,6 +106,14 @@ export class WealthyPresence {
     }
   }
 
+  async skip(amount?: number) {
+    this.#currentIndex =
+      (amount ?? this.#currentIndex + 1) % this.#presets.length;
+
+    const currentActivity = this.#presets[this.#currentIndex].value;
+    await this.setActivity(currentActivity);
+  }
+
   async run() {
     await this.stop();
     await this.#discordClient?.destroy();
@@ -124,9 +122,7 @@ export class WealthyPresence {
       const presets = this.#presets;
 
       // Empty state
-      if (presets.length === 0) {
-        return;
-      }
+      if (presets.length === 0) return;
 
       // More than 1 preset
       if (presets.length > 1) {
@@ -151,16 +147,9 @@ export class WealthyPresence {
     await this.#discordClient.login({ clientId: this.#appId });
   }
 
-  async skip(amount?: number) {
-    this.#currentIndex =
-      (amount ?? this.#currentIndex + 1) % this.#presets.length;
-
-    const currentActivity = this.#presets[this.#currentIndex].value;
-    await this.setActivity(currentActivity);
-  }
-
   async stop() {
     if (this.#interval) clearInterval(this.#interval);
+    await this.#discordClient?.clearActivity();
     await this.#discordClient?.destroy();
     this.#discordClient = null;
   }
@@ -168,9 +157,4 @@ export class WealthyPresence {
   isRunning() {
     return !!this.#discordClient;
   }
-}
-
-interface WealthyConfig {
-  presets: AnyPreset[];
-  appId: AppId | undefined;
 }
