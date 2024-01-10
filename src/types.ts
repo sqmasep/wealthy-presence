@@ -16,8 +16,8 @@ export type EventUnion =
       listener: () => void;
     }
   | {
-      name: "preset changed";
-      listener: (preset: AnyPreset["value"]) => void;
+      name: "activity changed";
+      listener: (preset: AnyPreset) => void;
     };
 
 export type EventData = {

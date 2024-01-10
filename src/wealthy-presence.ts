@@ -71,9 +71,9 @@ export class WealthyPresence {
     this.#discordClient?.emit("ready");
   }
 
-  async setActivity(preset: AnyPreset["value"]) {
+  async setActivity(preset: AnyPreset) {
     try {
-      const p = await getOrAwait(preset);
+      const p = await getOrAwait(preset.value);
 
       await this.#discordClient?.setActivity({
         details: await getOrAwait(p.title),
@@ -100,7 +100,7 @@ export class WealthyPresence {
         joinSecret: await getOrAwait(p.joinSecret),
         spectateSecret: await getOrAwait(p.spectateSecret),
       });
-      this.#emit("preset changed", preset);
+      this.#emit("activity changed", preset);
     } catch (error) {
       return Promise.reject(error);
     }
@@ -110,7 +110,7 @@ export class WealthyPresence {
     this.#currentIndex =
       (amount ?? this.#currentIndex + 1) % this.#presets.length;
 
-    const currentActivity = this.#presets[this.#currentIndex].value;
+    const currentActivity = this.#presets[this.#currentIndex];
     await this.setActivity(currentActivity);
   }
 
@@ -126,7 +126,7 @@ export class WealthyPresence {
 
       // More than 1 preset
       if (presets.length > 1) {
-        await this.setActivity(presets[this.#currentIndex].value);
+        await this.setActivity(presets[this.#currentIndex]);
 
         this.#interval = setInterval(async () => this.skip(), 15000);
         return;
@@ -134,13 +134,13 @@ export class WealthyPresence {
 
       // Only 1 preset
       if (isFunction(presets[0].value)) {
-        await this.setActivity(presets[0].value);
+        await this.setActivity(presets[0]);
 
         this.#interval = setInterval(async () => {
-          await this.setActivity(presets[0].value);
+          await this.setActivity(presets[0]);
         }, 15000);
       } else {
-        await this.setActivity(presets[0].value);
+        await this.setActivity(presets[0]);
       }
     });
 
