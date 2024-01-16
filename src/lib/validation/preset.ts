@@ -13,7 +13,7 @@ import {
 } from "valibot";
 import type { Button } from "./button";
 import { buttonSchema } from "./button";
-import type { Except, MaybeAnyFunction } from "~/utils/types";
+import type { Except } from "~/utils/types";
 
 const nonEmptyString = () => string([minLength(1)]);
 
@@ -45,8 +45,4 @@ export const presetSchema = object({
 
 export type Preset = Except<Output<typeof presetSchema>, "buttons"> & {
   buttons?: [Button] | [Button, Button];
-};
-
-export type PresetWithMaybeFunctions = {
-  [K in keyof Preset]: MaybeAnyFunction<Preset[K]>;
 };

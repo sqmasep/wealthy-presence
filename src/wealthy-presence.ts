@@ -1,36 +1,41 @@
 import { parse } from "valibot";
 import { appIdSchema, type AppId } from "./lib/validation/appId";
-import type { PresetWithMaybeFunctions } from "./lib/validation/preset";
+import type { Preset } from "./lib/validation/preset";
 import { getOrAwait } from "./utils/getOrAwait";
 import { isFunction } from "./utils/isFunction";
 import type { MaybeAnyFunction } from "./utils/types";
 import "dotenv/config";
 import RPC from "discord-rpc";
 import EventEmitter from "events";
-import type { EventData } from ".";
-import type { WealthyConfig } from "./types";
+import { createList, createPreset, type EventData } from ".";
+import type { List, Lists, WealthyConfig } from "./types";
 
 export interface AnyPreset {
-  value: MaybeAnyFunction<PresetWithMaybeFunctions>;
+  value: MaybeAnyFunction<Preset>;
   id: string;
 }
 
 export class WealthyPresence {
-  #presets: AnyPreset[] = [];
+  #queue: AnyPreset[] = [];
+  #lists: Lists;
   #appId: AppId;
   #discordClient: RPC.Client | null = null;
-  #currentIndex = 0;
+
+  #currentQueueIndex = 0;
   #interval: NodeJS.Timeout | null = null;
+
   #eventEmitter = new EventEmitter();
 
   constructor(config: WealthyConfig) {
     const appId = parse(appIdSchema, config.appId);
-    this.#presets = config.presets;
     this.#appId = appId;
+    this.#lists = config.lists;
+    this.#queue = config.lists[0].presets;
 
     RPC.register(appId);
   }
 
+  // Events
   on<TEventData extends EventData>(
     event: TEventData["name"],
     listener: TEventData["listener"],
@@ -52,23 +57,61 @@ export class WealthyPresence {
     this.#eventEmitter.emit(event, args);
   }
 
-  setPresets(presets: AnyPreset[]) {
+  // Queue
+  setQueue(queue: AnyPreset[]) {
     if (this.#interval) clearInterval(this.#interval);
-    this.#presets = presets;
-    this.#discordClient?.emit("ready");
-  }
-  getPresets() {
-    return this.#presets;
-  }
 
-  addPreset(preset: AnyPreset) {
-    this.#presets.push(preset);
+    this.#queue = queue;
     this.#discordClient?.emit("ready");
   }
 
-  removePreset(id: AnyPreset["id"]) {
-    this.#presets = this.#presets.filter(preset => preset.id !== id);
+  getQueue() {
+    return { presets: this.#queue };
+  }
+
+  addPresetToQueue(preset: AnyPreset) {
+    this.getQueue().presets.push(preset);
     this.#discordClient?.emit("ready");
+  }
+
+  removePresetFromQueue(id: AnyPreset["id"]) {
+    this.#queue = this.#queue.filter(preset => preset.id !== id);
+    this.#discordClient?.emit("ready");
+  }
+
+  replacePresetInQueue(id: AnyPreset["id"], preset: AnyPreset) {
+    const queue = this.getQueue();
+    const index = queue.presets.findIndex(p => p.id === id);
+
+    queue.presets[index] = preset;
+    this.#discordClient?.emit("ready");
+
+    return this.getQueue().presets[index];
+  }
+
+  // Lists
+  getLists() {
+    return this.#lists;
+  }
+
+  addList(list: List) {
+    this.#lists.push(list);
+  }
+
+  removeList(id: List["id"]) {
+    // this.#lists = this.#lists.filter(list => list.id !== id);
+  }
+
+  playList(id: List["id"]) {
+    const list = this.#lists.find(list => list.id === id);
+    if (!list) return;
+
+    this.setQueue(list.presets);
+  }
+
+  // Utils
+  async getComputedValue(preset: AnyPreset) {
+    return getOrAwait(preset.value);
   }
 
   async setActivity(preset: AnyPreset) {
@@ -76,29 +119,29 @@ export class WealthyPresence {
       const p = await getOrAwait(preset.value);
 
       await this.#discordClient?.setActivity({
-        details: await getOrAwait(p.title),
-        state: await getOrAwait(p.description),
+        details: p.title,
+        state: p.description,
 
-        largeImageKey: await getOrAwait(p.largeImageUrl),
-        largeImageText: await getOrAwait(p.largeImageText),
+        largeImageKey: p.largeImageUrl,
+        largeImageText: p.largeImageText,
 
-        smallImageKey: await getOrAwait(p.smallImageUrl),
-        smallImageText: await getOrAwait(p.smallImageText),
+        smallImageKey: p.smallImageUrl,
+        smallImageText: p.smallImageText,
 
-        buttons: await getOrAwait(p.buttons),
+        buttons: p.buttons,
 
-        partyId: await getOrAwait(p.partyId),
-        partySize: await getOrAwait(p.partySize),
-        partyMax: await getOrAwait(p.partyMax),
+        partyId: p.partyId,
+        partySize: p.partySize,
+        partyMax: p.partyMax,
 
-        startTimestamp: await getOrAwait(p.startTimestamp),
-        endTimestamp: await getOrAwait(p.endTimestamp),
+        startTimestamp: p.startTimestamp,
+        endTimestamp: p.endTimestamp,
 
-        instance: await getOrAwait(p.instance),
+        instance: p.instance,
 
-        matchSecret: await getOrAwait(p.matchSecret),
-        joinSecret: await getOrAwait(p.joinSecret),
-        spectateSecret: await getOrAwait(p.spectateSecret),
+        matchSecret: p.matchSecret,
+        joinSecret: p.joinSecret,
+        spectateSecret: p.spectateSecret,
       });
       this.#emit("activity changed", preset);
     } catch (error) {
@@ -106,41 +149,54 @@ export class WealthyPresence {
     }
   }
 
-  async skip(amount?: number) {
-    this.#currentIndex =
-      (amount ?? this.#currentIndex + 1) % this.#presets.length;
+  // Indexing (queue)
+  getCurrentQueueIndex() {
+    return this.#currentQueueIndex;
+  }
 
-    const currentActivity = this.#presets[this.#currentIndex];
+  // WARN this may cause issues
+  experimental$setCurrentQueueIndex(index: number) {
+    this.#currentQueueIndex = index;
+  }
+
+  async skip(amount?: number) {
+    const queue = this.getQueue();
+    this.#currentQueueIndex =
+      (amount ?? this.#currentQueueIndex + 1) % queue.presets.length;
+
+    const currentActivity = queue.presets[this.#currentQueueIndex];
     await this.setActivity(currentActivity);
   }
 
-  async run() {
+  // State
+  async start() {
     await this.stop();
     await this.#discordClient?.destroy();
     this.#discordClient = new RPC.Client({ transport: "ipc" });
     this.#discordClient.on("ready", async () => {
-      const presets = this.#presets;
+      if (this.#interval) clearInterval(this.#interval);
+      const queuePresets = this.getQueue().presets;
 
       // Empty state
-      if (presets.length === 0) return;
+      if (queuePresets.length === 0) return;
 
       // More than 1 preset
-      if (presets.length > 1) {
-        await this.setActivity(presets[this.#currentIndex]);
+      if (queuePresets.length > 1) {
+        await this.setActivity(queuePresets[this.#currentQueueIndex]);
 
         this.#interval = setInterval(async () => this.skip(), 15000);
         return;
       }
 
       // Only 1 preset
-      if (isFunction(presets[0].value)) {
-        await this.setActivity(presets[0]);
+      if (isFunction(queuePresets[0].value)) {
+        await this.setActivity(queuePresets[0]);
 
         this.#interval = setInterval(async () => {
-          await this.setActivity(presets[0]);
+          await this.setActivity(queuePresets[0]);
         }, 15000);
       } else {
-        await this.setActivity(presets[0]);
+        await this.setActivity(queuePresets[0]);
       }
     });
 
@@ -158,3 +214,18 @@ export class WealthyPresence {
     return !!this.#discordClient;
   }
 }
+
+const wealthyPresence = new WealthyPresence({
+  appId: "",
+
+  lists: [
+    createList("list1", [createPreset({ title: "test", description: "test" })]),
+    createList("list2", [createPreset({ title: "test2" })]),
+  ],
+});
+
+/**
+ * Preset: one unit of activity
+ * List: multiple presets
+ * Queue: current list of presets that are being cycled through
+ */
