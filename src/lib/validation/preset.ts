@@ -1,4 +1,4 @@
-import type { Output } from "valibot";
+import type { Input } from "valibot";
 import {
   array,
   boolean,
@@ -41,8 +41,11 @@ export const presetSchema = object({
   matchSecret: optional(nonEmptyString()),
   joinSecret: optional(nonEmptyString()),
   spectateSecret: optional(nonEmptyString()),
+
+  // Additional properties
+  durationInMs: optional(number(), 15000),
 });
 
-export type Preset = Except<Output<typeof presetSchema>, "buttons"> & {
+export type Preset = Except<Input<typeof presetSchema>, "buttons"> & {
   buttons?: [Button] | [Button, Button];
 };
