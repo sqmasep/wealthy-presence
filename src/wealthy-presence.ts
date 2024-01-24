@@ -30,7 +30,7 @@ export class WealthyPresence {
     const appId = parse(appIdSchema, config.appId);
     this.#appId = appId;
     this.#lists = config.lists;
-    this.#queue = config.lists[0].presets;
+    this.#queue = [...config.lists[0].presets];
 
     RPC.register(appId);
   }
@@ -61,7 +61,7 @@ export class WealthyPresence {
   setQueue(queue: AnyPreset[]) {
     if (this.#interval) clearInterval(this.#interval);
 
-    this.#queue = queue;
+    this.#queue = [...queue];
     this.#discordClient?.emit("ready");
   }
 
@@ -79,9 +79,9 @@ export class WealthyPresence {
     this.#discordClient?.emit("ready");
   }
 
-  replacePresetInQueue(id: AnyPreset["id"], preset: AnyPreset) {
+  replacePresetInQueue(presetId: AnyPreset["id"], preset: AnyPreset) {
     const queue = this.getQueue();
-    const index = queue.presets.findIndex(p => p.id === id);
+    const index = queue.presets.findIndex(p => p.id === presetId);
 
     queue.presets[index] = preset;
     this.#discordClient?.emit("ready");
@@ -98,9 +98,9 @@ export class WealthyPresence {
     this.#lists.push(list);
   }
 
-  removeList(id: List["id"]) {
-    // this.#lists = this.#lists.filter(list => list.id !== id);
-  }
+  // removeList(id: List["id"]) {
+  //   this.#lists = this.#lists.filter(list => list.id !== id);
+  // }
 
   playList(id: List["id"]) {
     const list = this.#lists.find(list => list.id === id);
@@ -156,7 +156,8 @@ export class WealthyPresence {
 
   // WARN this may cause issues
   experimental$setCurrentQueueIndex(index: number) {
-    this.#currentQueueIndex = index;
+    this.#currentQueueIndex = index % this.#queue.length;
+    this.#discordClient?.emit("ready");
   }
 
   async skip(amount?: number) {
